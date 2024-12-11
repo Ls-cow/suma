@@ -30,12 +30,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y google-chrome-stable
-        CHROME_VERSION=$(google-chrome --version | grep -oP "\d+\.\d+\.\d+\.\d+" | cut -d. -f1)
-        DRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION")
-        wget "https://chromedriver.storage.googleapis.com/$DRIVER_VERSION/chromedriver_linux64.zip"
-        unzip chromedriver_linux64.zip
-        sudo mv chromedriver /usr/local/bin/
-        chromedriver --version
+        sudo apt-get install -y chromium-chromedriver
+        sudo ln -s /usr/lib/chromium-browser/chromedriver /usr/local/bin/chromedriver
 
     - name: Verify Chrome and ChromeDriver
       run: |
@@ -45,11 +41,9 @@ jobs:
     - name: Start Flask app
       run: |
         python app.py > flask.log 2>&1 &
-        for i in {1..10}; do
-          curl -s http://127.0.0.1:5000 && break || sleep 3
-        done
+        sleep 10  # Dona temps perquè Flask es posi en marxa
         curl -f http://127.0.0.1:5000 || (echo "Flask no està en execució" && cat flask.log && exit 1)
 
     - name: Run Selenium tests
       run: |
-        python -m unittest discover -v || (echo "Els tests han fallat"; exit 1)
+        python -m unittest discover -v
